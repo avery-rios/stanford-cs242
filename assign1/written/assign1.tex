@@ -16,6 +16,9 @@
 \newcommand{\aidx}[2]{[#1]\,{#2}}        % \aidx{i}{a} = [i] a
 \newcommand{\apipe}[1]{\mid {#1}}        % \apipe{a} = | a
 
+\newcommand{\conj}[2]{#1 \wedge #2}
+\newcommand{\disj}[2]{#1 \vee #2}
+
 % Other useful syntax commands:
 %
 % \msf{x} = x (not italicised)
@@ -29,19 +32,26 @@
 \begin{document}
 
 \hwtitle
-  {Assignment 1}
-  {Will Crichton (wcrichto)} %% REPLACE THIS WITH YOUR NAME/ID
+{Assignment 1}
+{Will Crichton (wcrichto)} %% REPLACE THIS WITH YOUR NAME/ID
 
 \problem{Problem 1}
 
 Part 1:
 
 \begin{alignat*}{1}
-\msf{Property}~p ::= \qamp \varepsilon \\
-\mid \qamp \ldots \\
-\\
-\msf{Schema}~\tau ::= \qamp \tnum \prop{p} \\
-\mid \qamp \ldots
+  \msf{Property}~p ::= \qamp \varepsilon     \\
+  \mid \qamp \plt{n}                         \\
+  \mid \qamp \pgt{n}                         \\
+  \mid \qamp \peq{n}                         \\
+  \mid \qamp \conj{p}{p}                     \\
+  \mid \qamp \disj{p}{p}                     \\
+  \\
+  \msf{Schema}~\tau ::= \qamp \tnum \prop{p} \\
+  \mid \qamp \tstr \prop{p}                  \\
+  \mid \qamp \tbool                          \\
+  \mid \qamp \jarr{\tau}                     \\
+  \mid \qamp \jobj{(s : \tau)^*}             \\
 \end{alignat*}
 
 Part 2:
@@ -51,11 +61,39 @@ Part 2:
 % space out multiple assumptions.
 \begin{mathpar}
 
-\ir{S-Bool-False}{\ }{\matches{\falset}{\tbool}}
+  \ir{S-Bool-False}{\ }{\matches{\falset}{\tbool}}
 
-\ir{S-Bool-True}{\ }{\matches{\truet}{\tbool}}
+  \ir{S-Bool-True}{\ }{\matches{\truet}{\tbool}}
 
-% Inference rules go here
+  % Inference rules go here
+
+  \ir{P-Empty}{\ }{\matches{j}{\varepsilon}}
+
+  \ir{P-And}{\matches{j}{p_0} \\
+    \matches{j}{p_1}}
+  {\matches{j}{\conj{p_0}{p_1}}}
+
+  \ir{P-Or0}{\matches{j}{p_0}}{\matches{j}{\disj{p_0}{p_1}}}
+
+  \ir{P-Or1}{\matches{j}{p_1}}{\matches{j}{\disj{p_0}{p_1}}}
+
+  \ir{P-Lt}{nj \plt{nt}}{\matches{nj}{\plt{nt}}}
+
+  \ir{P-Gt}{nj \pgt{nt}}{\matches{nj}{\pgt{nt}}}
+
+  \ir{P-Eq}{nj \peq{nt}}{\matches{nj}{\peq{nt}}}
+
+  \ir{S-Number}{\matches{n}{p}}{\matches{n}{\tnum \prop{p}}}
+
+  \ir{S-String}{\matches{s}{p}}{\matches{s}{\tstr \prop{p}}}
+
+  \ir{S-Arr}
+  {\forall i = 0 \ldots |j| - 1 \ . \ \matches{j_i}{\tau}}
+  {\matches{\jarr{j^*}}{{\jarr{\tau}}}}
+
+  \ir{S-Obj}
+  {\forall s \in st \ . \ \conj{s \in sj}{\matches{j_s}{\tau_s}}}
+  {\matches{\jobj{(sj : j)^*}}{\jobj{(st : \tau)^*}}}
 
 \end{mathpar}
 
@@ -64,19 +102,37 @@ Part 2:
 Part 1:
 
 \begin{mathpar}
-% Inference rules go here
+  % Inference rules go here
+  \ir{E-Key}{\ }{\steps{(\akey{s}{a}, \jobj{s : j, \ldots})}{(a, j)}}
+
+  \ir{E-Index}{\ }{\steps{(\aidx{i}{a}, \jarr{\ldots, j_i, \ldots})}{(a, j_i)}}
+
+  \ir{E-Pipe-Elem}
+  {\forall i = 0 \ldots |j| - 1 \ . \ \steps{(a, j_i)}{(a', j_i')}}
+  {\steps{(\apipe{a}, \jarr{j^*})}{(\apipe{a'}, \jarr{j'^*})}}
+
+  \ir{E-Pipe-Empty}
+  {\ }{\steps{(\apipe{\eps}, \jarr{j^*})}{(\eps, \jarr{j^*})}}
+
 \end{mathpar}
 
 Part 2:
 
 \begin{mathpar}
-% Inference rules go here
+  \ir{A-Empty}{\ }{\matches{\eps}{\tau}}
+
+  \ir{A-Key}{\matches{a}{\tau}}{\matches{\akey{k}{a}}{\jobj{k: \tau, \ldots}}}
+
+  \ir{A-Index}{\matches{a}{\tau}}{\matches{\aidx{i}{a}}{\jarr{\tau}}}
+
+  \ir{A-Pipe}{\matches{a}{\tau}}{\matches{\apipe{a}}{\jarr{\tau}}}
+
 \end{mathpar}
 
 \textit{Accessor safety}: for all $a, j, \tau$, if $\matches{a}{\tau}$ and $\matches{j}{\tau}$, then there exists a $j'$ such that $\evals{(a, j)}{\aeps, j'}$.
 
 \begin{proof}
-% Proof goes here.
+  % Proof goes here.
 \end{proof}
 
 \end{document}
